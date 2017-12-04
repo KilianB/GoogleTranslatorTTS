@@ -1,5 +1,5 @@
 # Google-Text-To-Speech-Java-API
-Convert long strings of text into .mp3 files in real time utilizing googles translator text to speech service. Supports multi language requests and multi threading resulting in usually responds times of .75 seconds. 
+Convert long strings of text into .mp3 files in real time utilizing googles translator text to speech service. Supports multi-language- requests and multi-threading resulting in usually responds times of < .75 seconds. 
 
 (TODO: be aware that the example package is outdated at the moment)
 
