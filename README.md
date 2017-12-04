@@ -1,8 +1,9 @@
 # Google-Text-To-Speech-Java-API
 Convert long strings of text into .mp3 files in real time utilizing googles translator text to speech service. Supports multi language requests and multi threading resulting in usually responds times of .75 seconds. 
 
+(TODO: be aware that the example package is outdated at the moment)
 
-## Example usage (TODO: be aware that the example package is outdated at the moment)
+## Example usage 
 
 ```java
 public class TextToSpeechSample{
@@ -21,7 +22,7 @@ public class TextToSpeechSample{
 	
 		//Convert the text and retrieve an mp3 file
 		GoogleTextToSpeech tts = new GoogleTextToSpeech(outputPath);
-		File convertedText = tts.convertText(text, GLanguage.English_US, "FileName");
+		File convertedTextMP3 = tts.convertText(text, GLanguage.English_US, "FileName");
 		
 		//Non blocking method. Call event handler in the observer upon finishing
 		boolean deleteTemporaryFiles = true;
@@ -41,25 +42,10 @@ public class TextToSpeechSample{
 		};
 		
 		//Asynch is available as well
-		gtts.convertTextMultiLanguage(text,language,"FileName");
+		convertedTextMP3 = File gtts.convertTextMultiLanguage(text,language,"FileName");
 	
 	}
 }
-```
-
-```java
-GoogleTextToSpeech gtts = new GoogleTextToSpeech("");
-		
-		String text[] = new String[]{
-			"The author",
-			"Immanuel Kant",
-			"argued that the human mind creates the structure of human experience, that reason is the source of morality."
-		};
-		GLanguage[] language = new GLanguage[] {
-				GLanguage.English_GB,
-				GLanguage.German,
-				GLanguage.English_GB
-		};
 ```
 
 
