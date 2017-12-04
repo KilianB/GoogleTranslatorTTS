@@ -1,8 +1,9 @@
 # Google-Text-To-Speech-Java-API
-Converts a string of text to mp3 files utilizing the google text to speech api
+Convert long strings of text into .mp3 files in real time utilizing googles translator text to speech service. Supports multi language requests and multi threading resulting in usually responds times of .75 seconds. 
 
 
-## Example usage
+## Example usage (TODO: be aware that the example package is outdated at the moment)
+
 ```java
 public class TextToSpeechSample{
 	
@@ -17,13 +18,48 @@ public class TextToSpeechSample{
 		//Create directory
 		File outputDirectory = new File(outputPath);
 		outputDirectory.mkdirs();
-		
-		//Create an mp3 player to playback the final result
-		SimpleMP3Player mp3Player = new SimpleMP3Player();
-		
-		//Finally convert the text and play back the mp3 files
+	
+		//Convert the text and retrieve an mp3 file
 		GoogleTextToSpeech tts = new GoogleTextToSpeech(outputPath);
-		tts.convertText(text, "LoremIpsum", mp3Player);
+		File convertedText = tts.convertText(text, GLanguage.English_US, "FileName");
+		
+		//Non blocking method. Call event handler in the observer upon finishing
+		boolean deleteTemporaryFiles = true;
+		gtts.convertTextAsynch(text,GLanguage.German, "FileName",deleteTemporaryFiles, <? extends GoogleTextToSpeechObserver>);
+	
+		//Request an mp3 file with multiple different pronounciations
+		String text[] = new String[]{
+			"The author",
+			"Immanuel Kant",
+			"argued that the human mind creates the structure of human experience, that reason is the source of morality."
+		};
+		
+		GLanguage[] language = new GLanguage[] {
+				GLanguage.English_GB,
+				GLanguage.German,
+				GLanguage.English_GB
+		};
+		
+		//Asynch is available as well
+		gtts.convertTextMultiLanguage(text,language,"FileName");
+	
 	}
 }
 ```
+
+```java
+GoogleTextToSpeech gtts = new GoogleTextToSpeech("");
+		
+		String text[] = new String[]{
+			"The author",
+			"Immanuel Kant",
+			"argued that the human mind creates the structure of human experience, that reason is the source of morality."
+		};
+		GLanguage[] language = new GLanguage[] {
+				GLanguage.English_GB,
+				GLanguage.German,
+				GLanguage.English_GB
+		};
+```
+
+
