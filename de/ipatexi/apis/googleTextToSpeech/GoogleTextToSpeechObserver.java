@@ -1,4 +1,4 @@
-package de.ipatexi.apis.googleTextToSpeech;
+package tts;
 import java.io.File;
 
 public interface GoogleTextToSpeechObserver {
@@ -23,5 +23,13 @@ public interface GoogleTextToSpeechObserver {
 	 * @param id A unique id given to the request to connect successive fileDownloaded calls 
 	 */
 	public void fileDownloadCompleted(int id);
+	
+	/**
+	 * Gets called if all files are downloaded and the individual files are merged into 1 final file.
+	 * Be aware that this function only gets called if the mergeFiles flasg is set to true. 
+	 * @param id
+	 * @param f
+	 */
+	public void mergeCompleted(int id, File f);
 	
 }
