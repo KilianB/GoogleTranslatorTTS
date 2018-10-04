@@ -16,10 +16,13 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 /**
  * Convert long strings of text into .mp3 files in real time utilizing googles
@@ -34,6 +37,14 @@ import java.util.concurrent.Future;
  */
 public class GoogleTextToSpeech {
 
+	private static final Logger LOGGER = Logger.getLogger(GoogleTextToSpeech.class.getName());
+
+	private static final AtomicInteger convertId = new AtomicInteger(0);
+	private static final int BITRATE = 32000; // 32kbit Bitrate of the files
+	private static final int BITS_PER_DATA_BLOCK = 736; // MP3 Data block lenght
+	private static final int BITS_PER_HEADER_BLOCK = 32; // MP3 Header block length
+	private static final byte[] MP3_HEADER = new byte[] { (byte) 0xff, (byte) 0xf3, 0x44, (byte) 0xc4 };
+
 	private final String GOOGLE_URL = "https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&q=__TEXT__&tl=";
 	private GLanguage defaultLanguage = English_GB; // all allowed language codes can be found here
 													// https://cloud.google.com/speech/docs/languages
@@ -44,56 +55,51 @@ public class GoogleTextToSpeech {
 	 * sentence (or returning a 420 http failure). To solve this issue we split up
 	 * our request in multiple requests. Increasing the characterLimit will result
 	 * in increased performance and fewer generated mp3 files.
+	 * 
+	 * TODO we could use a shifting window to avoid pronaunciation issues when starting a new
+	 * sentence. Overlap for 10 characters and XOR the bytes produced to find the beginning.
+	 * 
 	 */
 	private int characterLimit = 200;
 	private String outputDirectoryPath; // The directory of the saved files
 
 	/*
 	 * @formatter:off
-	 * The end of each file is padded with silence. Remove it to ensures the merged files to play back seamlessly .
-	 *  Alternative 1: Inspect the bytes and figure out where exactly the silence starts. This will hit 
-	 *  the merge performance as we have to inspect the individual bytes before writing them.
-	 * 	The signature of the to be removed block looks like the following: 
+	 * The end of each file is padded with silence. Remove it to ensures the merged files play back seamlessly .
+	 *  Alternative 1: Inspect the bytes and figure out where exactly the silence starts. 
 	 * 
 	 * 1: MP3 Header:
-	 * 	ff f3 44 c   
+	 * 	ff f3 44 c4   
 	 * 2: MP3 Data Block:
-	 *   4 ac 20 20 03 48 20 20 20 20 39 39 2e
+	 *   4 ac 20 20 03 48 20 20 20 20 39 39 2e (arbitraty bytes? skip them 12)
 	 *  35 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 
 	 *  55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55
 	 *  55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 
 	 *  55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 
 	 *  55 55 4c 41 4d 45 33 2e  
 	 *  
-	 *  
-	 * Alternative 2: Take a good guess and simply truncate the last x Bytes.
-	 */
-	private final int BITRATE = 32000; 				//32kbit Bitrate of the files 
-	private final int BITS_PER_DATA_BLOCK = 736;	//MP3 Data block lenght
-	private final int BITS_PER_HEADER_BLOCK = 32;	//MP3 Header block length
-	double secsToTruncate = 0.3;					//How many seconds of the end of the file do we want to truncate?
-	long bytesToTruncate = 0;						//The actual count of bytes we truncate. Gets calculated by the seconds
-	/*
+	 *  //Some silence blocks found look like this 
+	 *  fff3 44c4 ac00 0003 4800 0000 00aa aaaa ... aaaa
+	 *  fff3 44c4 7100 0003 4800 0000 00aa aaaa ... aaaa
+	 *  fff3 44c4 ac00 0003 4800 0000 00aa aaaa
+	 *  fff3 44c4 ac00 0003 4800 0000 00aa aaaa
+	 *  fff3 44c4 ac00 0003 4800 0000 00aa aaaa
+	 *  fff3 44c4 ac00 0003 4800 0000 0055 5555 ... 5555
 	 * @formatter:on
+	 * 
 	 * If you bombard google with to many requests at the same time they will eventually blacklist you. If you multi thread a large request it's better to add a small delay
 	 * between each request. 
 	 */
-	long msSleepBetweenRequests = 50;
+	
+	private int mismatchBlockThreshold = 12;	//How many blocks may differ from aaaa or 5555 before we truncate them
+	
+	private long msSleepBetweenRequests = 50;
 
 	/**
 	 * @param outFilePath The directory where the .mp3 files will be stored
 	 */
 	public GoogleTextToSpeech(String outputDirectoryPath) {
 		this.outputDirectoryPath = outputDirectoryPath;
-
-		bytesToTruncate = (long) ((BITRATE / 8) * secsToTruncate);
-		long bytePerBlock = (BITS_PER_DATA_BLOCK + BITS_PER_HEADER_BLOCK) / 8;
-
-		// We only want to truncate an entire header + block or our file might get
-		// corrupted
-		if (bytesToTruncate % bytePerBlock != 0) {
-			bytesToTruncate = findClosestDivisibleInteger(bytesToTruncate, bytePerBlock);
-		}
 		return;
 	}
 
@@ -119,22 +125,21 @@ public class GoogleTextToSpeech {
 	 * Convert the supplied text to a .mp3 file using the supplied language. Blocks
 	 * and returns the generated mp3 file once it is ready.
 	 * 
-	 * @param text     The string which will be converted to speech. Special
-	 *                 characters might mess up the pronunciation.
-	 * @param language The language and accent which will be used to pronounce the
-	 *                 text.
-	 * @param The      name of the outputfile without extension. The file is created
-	 *                 by appending the outputname to the output directory supplied
-	 *                 by the constructor of this object which in turns allows you
-	 *                 to specify sub directories using the file name. e.g. "MyFile"
-	 *                 or "Foo/Bar"
+	 * @param text           The string which will be converted to speech. Special
+	 *                       characters might mess up the pronunciation.
+	 * @param language       The language and accent which will be used to pronounce
+	 *                       the text.
+	 * @param outputFileName The name of the output file without extension. The file
+	 *                       is created by appending the output name to the output
+	 *                       directory supplied by the constructor of this object
+	 *                       which in turns allows you to specify sub directories
+	 *                       using the file name. e.g. "MyFile" or "Foo/Bar"
 	 * @return a single mp3 file. Null if an error occurred during conversion (e.g.
 	 *         no internet access).
 	 */
 	public File convertText(String text, GLanguage language, String outputFileName) {
-		int hash = text.hashCode();
 		ArrayList<File> tempFiles = new ArrayList<File>();
-		convertText(new String[] { text }, new GLanguage[] { language }, outputFileName, hash, tempFiles, null);
+		convertText(new String[] { text }, new GLanguage[] { language }, outputFileName, tempFiles, null);
 		return mergeFiles(outputFileName, true, tempFiles.toArray(new File[tempFiles.size()]));
 	}
 
@@ -144,22 +149,21 @@ public class GoogleTextToSpeech {
 	 * corresponding language supplied in the languages array. Blocks and returns
 	 * the generated mp3 file once it is ready.
 	 * 
-	 * @param text     The string which will be converted to speech. Special
-	 *                 characters might mess up the pronunciation.
-	 * @param language The language and accent which will be used to pronounce the
-	 *                 text.
-	 * @param The      name of the outputfile without extension. The file is created
-	 *                 by appending the outputname to the output directory supplied
-	 *                 by the constructor of this object which in turns allows you
-	 *                 to specify sub directories using the file name. e.g. "MyFile"
-	 *                 or "Foo/Bar"
+	 * @param text           The string which will be converted to speech. Special
+	 *                       characters might mess up the pronunciation.
+	 * @param language       The language and accent which will be used to pronounce
+	 *                       the text.
+	 * @param outputFileName The name of the output file without extension. The file
+	 *                       is created by appending the output name to the output
+	 *                       directory supplied by the constructor of this object
+	 *                       which in turns allows you to specify sub directories
+	 *                       using the file name. e.g. "MyFile" or "Foo/Bar"
 	 * @return a single mp3 file. Null if an error occurred during conversion (e.g.
 	 *         no internet access).
 	 */
 	public File convertTextMultiLanguage(String[] text, GLanguage language[], String outputFileName) {
-		int hash = text.hashCode();
 		ArrayList<File> tempFiles = new ArrayList<File>();
-		convertText(text, language, outputFileName, hash, tempFiles, null);
+		convertText(text, language, outputFileName, tempFiles, null);
 
 		return mergeFiles(outputFileName, true, tempFiles.toArray(new File[tempFiles.size()]));
 	}
@@ -171,37 +175,45 @@ public class GoogleTextToSpeech {
 	 * time conversion takes depends on the specified character limit your internet
 	 * connection and the length of the text.
 	 * 
-	 * @param text
-	 * @param language
+	 * @param text            The string which will be converted to speech. Special
+	 *                        characters might mess up the pronunciation.
+	 * @param language        The language and accent which will be used to
+	 *                        pronounce the text.
 	 * @param outputFilePath
 	 * @param deleteTempFiles
 	 * @param observer
 	 */
 	public void convertTextAsynch(String text, GLanguage language, String outputFilePath, boolean deleteTempFiles,
 			GoogleTextToSpeechObserver observer) {
-		new Thread(() -> {
-			int hash = text.hashCode();
-			ArrayList<File> tempFiles = new ArrayList<File>();
-			convertText(new String[] { text }, new GLanguage[] { language }, outputFilePath, hash, tempFiles, observer);
-			File mergedFile = mergeFiles(outputFilePath, deleteTempFiles,
-					tempFiles.toArray(new File[tempFiles.size()]));
-			if (observer != null)
-				observer.mergeCompleted(hash, mergedFile);
-		}).start();
-		return;
+		convertTextMultiLanguageAsynch(new String[] { text }, new GLanguage[] { language }, outputFilePath,
+				deleteTempFiles, observer);
 	}
 
+	/**
+	 * Asynchronously convert the supplied text to a single .mp3 file using the
+	 * submitted languages. This function is not faster than the synchronous call.
+	 * If an observer is supplied you get notified once the files are ready. The
+	 * time conversion takes depends on the specified character limit your internet
+	 * connection and the length of the text.
+	 * 
+	 * @param text            The string which will be converted to speech. Special
+	 *                        characters might mess up the pronunciation.
+	 * @param language        The language and accent which will be used to
+	 *                        pronounce the text.
+	 * @param outputFilePath
+	 * @param deleteTempFiles
+	 * @param observer
+	 */
 	public void convertTextMultiLanguageAsynch(String[] text, GLanguage language[], String outoutFilePath,
 			boolean deleteTempFiles, GoogleTextToSpeechObserver observer) {
 		new Thread(() -> {
-			int hash = text.hashCode();
 			ArrayList<File> tempFiles = new ArrayList<File>();
-			convertText(text, language, outoutFilePath, hash, tempFiles, observer);
+			int id = convertText(text, language, outoutFilePath, tempFiles, observer);
 			File mergedFile = mergeFiles(outoutFilePath, deleteTempFiles,
 					tempFiles.toArray(new File[tempFiles.size()]));
-			
+
 			if (observer != null)
-				observer.mergeCompleted(hash, mergedFile);
+				observer.mergeCompleted(id, mergedFile);
 
 		}).start();
 	}
@@ -214,12 +226,14 @@ public class GoogleTextToSpeech {
 	 * @param text
 	 * @param language
 	 * @param outputFilePrefix
-	 * @param hashIdentifier
 	 * @param temporaryFiles
 	 * @param observer
+	 * @return the id used to notify the listeners
 	 */
-	private void convertText(String[] text, GLanguage[] language, String outputFilePrefix, int hashIdentifier,
+	private int convertText(String[] text, GLanguage[] language, String outputFilePrefix,
 			ArrayList<File> temporaryFiles, GoogleTextToSpeechObserver observer) {
+
+		int identifier = convertId.incrementAndGet();
 
 		ArrayList<RequestData> requestData = new ArrayList<RequestData>();
 
@@ -278,7 +292,8 @@ public class GoogleTextToSpeech {
 			final int requestWrapperCount = requestData.size();
 
 			// Threads
-			// IO heavy operation therefore we can increase our thread pool? Don't strain google too much.
+			// IO heavy operation therefore we can increase our thread pool? Don't strain
+			// google too much.
 			ExecutorService threadPool = Executors.newFixedThreadPool(10);
 			ArrayList<Future<File>> callback = new ArrayList<Future<File>>();
 			int fileNamingOffset = 0;
@@ -320,7 +335,7 @@ public class GoogleTextToSpeech {
 							is.close();
 							outstream.close();
 							conn.disconnect();
-						
+
 							return outputFile;
 						}
 
@@ -341,22 +356,22 @@ public class GoogleTextToSpeech {
 				File tempFile = callback.get(i).get();
 				if (observer != null) {
 					if (i == 0 && fileNamingOffset == 0) {
-						observer.firstFileDownloaded(tempFile, hashIdentifier);
+						observer.firstFileDownloaded(tempFile, identifier);
 					}
-					observer.fileDownloaded(tempFile, hashIdentifier);
+					observer.fileDownloaded(tempFile, identifier);
 				}
 				temporaryFiles.add(tempFile);
 			}
 
 			threadPool.shutdown();
 			if (observer != null) {
-				observer.fileDownloadCompleted(hashIdentifier);
+				observer.fileDownloadCompleted(identifier);
 			}
-			return;
+			return identifier;
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return;
+			return identifier;
 		}
 
 	}
@@ -413,56 +428,86 @@ public class GoogleTextToSpeech {
 				boolean done = false; // Flag to indicate that we truncated the remaining bytes and can move to the
 										// next available file.
 
+				// Take a look at the end of the file and determine where the silence Starts!
+
+				// Work one mp3 data block at a time
+				int byteCount = (BITS_PER_DATA_BLOCK + BITS_PER_HEADER_BLOCK) / 8;
+
+				// Determine how many data blocks we ignore at the end of each file because it's
+				// only silence
+				int truncateBlocksAtEndOfFile = 0;
+
+				for (truncateBlocksAtEndOfFile = 0; true; truncateBlocksAtEndOfFile++) {
+										
+					byte[] bArray = new byte[byteCount];
+	
+					mb.position((int) fileChannel.size() - byteCount * (truncateBlocksAtEndOfFile+1));
+					mb.get(bArray,0, byteCount);
+
+					// Check if we caught an mp3 header
+					if (!Arrays.equals(bArray, 0, 4, MP3_HEADER, 0, 4)) {
+						LOGGER.warning("Expected mp3 header block but didn't find ít");
+					}
+
+					// Skip 12 (arbitrary?) bytes
+
+					
+					int dataStart = MP3_HEADER.length + 12;
+					
+					System.out.println("Block: " + truncateBlocksAtEndOfFile);
+					
+					boolean mismatchBlock = false;
+					
+					for (int j = dataStart, mismatch = 0; j < byteCount; j++) {
+					
+						// Check if it is 55 or aa block
+						if (bArray[j] != (byte)0x55 && bArray[j] != (byte)0xAA) {
+							//System.out.println("Mimatch: " + Integer.toHexString(bArray[j]));
+							mismatch++;
+							if(mismatch >= mismatchBlockThreshold) {
+								mismatchBlock = true;
+								break;
+							}
+							
+						}
+					}
+					if(mismatchBlock)
+						break;
+				}
+				
+				
+
+				int bytesToTruncate = truncateBlocksAtEndOfFile * ((BITS_PER_DATA_BLOCK + BITS_PER_HEADER_BLOCK) / 8);
+
+				//Reset buffer position
+				mb.position(0);
+				
 				while (!done && mb.hasRemaining()) {
 					nGet = Math.min(mb.remaining(), SIZE);
-
-					/*
-					 * @formatter:off
-					 * TODO The end of each file is padded with silence. We should remove it to ensure a better sounde quality.
-					 * Alternative 1: Inspect the bytes and figure out where exactly the silence starts. This will hit 
-					 * the merge performance as we have to inspect the individual bytes before writing them.
-					 * 	1: MP3 Header:
-					 * 		ff f3 44 c   
-					 *  2: MP3 Data Block:
-					 *  	4 ac 20 20 03 48 20 20 20 20 39 39 2e
-					 *  	35 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 
-					 *  	55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55
-					 *  	55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 
-					 *  	55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 
-					 *  	55 55 4c 41 4d 45 33 2e  
-					 *  
-					 * Alternative 2: Take a good guess and simply truncate the last x Bytes.
-					 * @formatter:on
-					 */
-					// System.out.println(nGet + " " + mb.remaining() + " " + bytesToTruncate + " "
-					// + (mb.remaining()-bytesToTruncate) );
 
 					if (nGet > mb.remaining() - bytesToTruncate) {
 
 						nGet = (int) (mb.remaining() - bytesToTruncate);
-						// if(nGet < 0)
-						// nGet = 0;
 						done = true;
 					}
 					;
 
 					barray = new byte[nGet];
-
-					// Alternative 1 here with a linear search approach for xff followed by xf3
 					mb.get(barray, 0, nGet);
 					fileOutputStream.write(barray);
 				}
 
 				fileInputStream.close();
+				fileChannel.close();
 			}
 
 			fileOutputStream.close();
 
-	
 			// Delete temporary files if applicable
 			if (deleteOldFiles) {
 				for (File f : filesToMerge) {
-					//Files.delete(f.toPath()); for exception. Can be blocked if using inside git repo
+					// Files.delete(f.toPath()); for exception. Can be blocked if using inside git
+					// repo
 					f.delete();
 				}
 			}
