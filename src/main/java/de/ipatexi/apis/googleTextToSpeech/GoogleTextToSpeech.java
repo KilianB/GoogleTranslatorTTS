@@ -266,12 +266,12 @@ public class GoogleTextToSpeech {
 
 		// Download the files
 
-		for (RequestData data : requestData) {
-			System.out.println("Req Data: " + data.language);
-			for (String s : data.requests) {
-				System.out.println(s);
-			}
-		}
+//		for (RequestData data : requestData) {
+//			System.out.println("Req Data: " + data.language);
+//			for (String s : data.requests) {
+//				System.out.println(s);
+//			}
+//		}
 
 		try {
 			// Build request

@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>github.com.kilianB</groupId>
-	<artifactId>googleTranslatorTTS</artifactId>
+	<artifactId>GoogleTranslatorTTS</artifactId>
 	<version>1.0.0</version>
 
 	<description>A java library allowing to convert text to an mp3 file using the google translator endpoint</description>
@@ -12,14 +13,14 @@
 
 	<properties>
 		<bintrayRepository>maven</bintrayRepository>
-		<bintrayPackage>googleTranslatorTTS</bintrayPackage>
+		<bintrayPackage>GoogleTranslatorTTS</bintrayPackage>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<licenses>
 		<license>
-			<name>GPL-3.0</name>
-			<url>https://www.gnu.org/licenses/gpl-3.0.en.html</url>
+			<name>MIT</name>
+			<url>https://opensource.org/licenses/MIT</url>
 		</license>
 	</licenses>
 
@@ -32,15 +33,7 @@
 				<role>Developer</role>
 			</roles>
 		</developer>
-		<developer>
-			<name>Valentin Michalak</name>
-			<organizationUrl>https://github.com/vmichalak</organizationUrl>
-			<roles>
-				<role>Original Release</role>
-			</roles>
-		</developer>
 	</developers>
-
 
 	<build>
 		<plugins>
