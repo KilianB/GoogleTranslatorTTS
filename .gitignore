@@ -1,0 +1,4 @@
+/bin/
+*.class
+*.mp3
+/target/

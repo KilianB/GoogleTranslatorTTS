@@ -1,16 +1,16 @@
-package tts;
+package de.ipatexi.apis.googleTextToSpeech;
 
 public enum GLanguage {
 	//TODO find naming convention
 	//all allowed language codes can be found here https://cloud.google.com/speech/docs/languages
 	Afrikaans("af-za"),
-	Amharic("am-et"), 			//አማርኛ (ኢትዮጵያ)
-	Armenian("hy-am"),			//Հայ (Հայաստան)
-	Azerbaijani("az-az"),		//Azərbaycan 
+	Amharic("am-et"), 			//áŠ áˆ›áˆ­áŠ› (áŠ¢á‰µá‹®áŒµá‹«)
+	Armenian("hy-am"),			//Õ€Õ¡Õµ (Õ€Õ¡ÕµÕ¡Õ½Õ¿Õ¡Õ¶)
+	Azerbaijani("az-az"),		//AzÉ™rbaycan 
 	Bahasa_Indonesia("id-id"),
 	Bahasa_Melayu("ms-my"),
-	Bengali("bn-db"), 			//বাংলা (বাংলাদেশ)
-	Bengali_India("bn-in"), 	//বাংলা (ভারত)
+	Bengali("bn-db"), 			//à¦¬à¦¾à¦‚à¦²à¦¾ (à¦¬à¦¾à¦‚à¦²à¦¾à¦¦à§‡à¦¶)
+	Bengali_India("bn-in"), 	//à¦¬à¦¾à¦‚à¦²à¦¾ (à¦­à¦¾à¦°à¦¤)
 	Catalan("ca-es"),
 	Czech("cs-cz"),
 	Dansk("da-dk"),
@@ -53,16 +53,16 @@ public enum GLanguage {
 	French_Canada("fr-ca"),
 	French("fr-fr"),
 	Galician("el-es"),
-	Georgian("ka-ge"), 				//ქართული (საქართველო)	
-	Gujarati("gu-in"), 				//ગુજરાતી (ભારત)
+	Georgian("ka-ge"), 				//áƒ¥áƒ�áƒ áƒ—áƒ£áƒšáƒ˜ (áƒ¡áƒ�áƒ¥áƒ�áƒ áƒ—áƒ•áƒ”áƒšáƒ�)	
+	Gujarati("gu-in"), 				//àª—à«�àªœàª°àª¾àª¤à«€ (àª­àª¾àª°àª¤)
 	Croatian("hr-hr"),
 	Zulu("zu-za"),
 	Island("is-is"),
 	Italian("it-it"),
 	Javanese("jv-id"),
-	Kannada("kn-in"),				//ಕನ್ನಡ (ಭಾರತ) 	India
-	Khmer("	km-KH"),				//ភាសាខ្មែរ (កម្ពុជា)	Kambodia
-	Lao("lo-lA"),					//ລາວ (ລາວ)	
+	Kannada("kn-in"),				//à²•à²¨à³�à²¨à²¡ (à²­à²¾à²°à²¤) 	India
+	Khmer("	km-KH"),				//áž—áž¶ážŸáž¶áž�áŸ’áž˜áŸ‚ážš (áž€áž˜áŸ’áž–áž»áž‡áž¶)	Kambodia
+	Lao("lo-lA"),					//àº¥àº²àº§ (àº¥àº²àº§)	
 	Latvian("lv-lv"),
 	Lithuanian("lt-lt"),
 	Hungarian("hu-hu"),
@@ -83,15 +83,15 @@ public enum GLanguage {
 	Swahili_Kenya("sw-ke"),
 	Finnish("fi-fi"),
 	Swedish("sv-se"),
-	Tamil_India("ta-in"),			//தமிழ் (இந்தியா)
-	Tamil_Singapore("ty-sg"),		//தமிழ் (சிங்கப்பூர்)
-	Tamil_SriLanka("ta-lk"),		//தமிழ் (இலங்கை)
-	Tamil_Malaysia("ty-my"),		//தமிழ் (மலேசியா)
-	Telugu("te-in"),				//తెలుగు (భారతదేశం)	
+	Tamil_India("ta-in"),			//à®¤à®®à®¿à®´à¯� (à®‡à®¨à¯�à®¤à®¿à®¯à®¾)
+	Tamil_Singapore("ty-sg"),		//à®¤à®®à®¿à®´à¯� (à®šà®¿à®™à¯�à®•à®ªà¯�à®ªà¯‚à®°à¯�)
+	Tamil_SriLanka("ta-lk"),		//à®¤à®®à®¿à®´à¯� (à®‡à®²à®™à¯�à®•à¯ˆ)
+	Tamil_Malaysia("ty-my"),		//à®¤à®®à®¿à®´à¯� (à®®à®²à¯‡à®šà®¿à®¯à®¾)
+	Telugu("te-in"),				//à°¤à±†à°²à±�à°—à±� (à°­à°¾à°°à°¤à°¦à±‡à°¶à°‚)	
 	Vietnamese("vi-vn"),
 	Turkish("tr-tr"),
-	Urdu_Pakistan("ur-pk"),			//اردو (پاکستان)
-	Urdu_India("ur-in"),			//اردو (بھارت)
+	Urdu_Pakistan("ur-pk"),			//Ø§Ø±Ø¯Ùˆ (Ù¾Ø§Ú©Ø³ØªØ§Ù†)
+	Urdu_India("ur-in"),			//Ø§Ø±Ø¯Ùˆ (Ø¨Ú¾Ø§Ø±Øª)
 	Greek("el-gr"),
 	Bulgarian("bg-bg"),
 	Russian("ru-ru"),
