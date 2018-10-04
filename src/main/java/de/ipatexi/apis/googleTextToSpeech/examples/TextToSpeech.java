@@ -1,4 +1,4 @@
-package de.ipatexi.apis.googleTextToSpeech.example;
+package de.ipatexi.apis.googleTextToSpeech.examples;
 
 import java.io.File;
 

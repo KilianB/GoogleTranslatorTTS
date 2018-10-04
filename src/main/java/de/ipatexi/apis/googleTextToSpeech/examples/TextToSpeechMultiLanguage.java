@@ -1,4 +1,4 @@
-package de.ipatexi.apis.googleTextToSpeech.example;
+package de.ipatexi.apis.googleTextToSpeech.examples;
 
 import java.io.File;
 
@@ -21,9 +21,6 @@ public class TextToSpeechMultiLanguage {
 
 		// Convert the text and retrieve an mp3 file
 		GoogleTextToSpeech tts = new GoogleTextToSpeech(outputPath);
-
-		// Non blocking method. Call event handler in the observer upon finishing
-		boolean deleteTemporaryFiles = true;
 
 		// Request an mp3 file with multiple different pronounciations
 		String text[] = new String[] { "The author", "Immanuel Kant",
