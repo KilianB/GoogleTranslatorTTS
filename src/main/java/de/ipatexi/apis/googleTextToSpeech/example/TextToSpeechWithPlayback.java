@@ -2,11 +2,10 @@ package de.ipatexi.apis.googleTextToSpeech.example;
 
 import java.io.File;
 
+import de.ipatexi.apis.googleTextToSpeech.GLanguage;
 import de.ipatexi.apis.googleTextToSpeech.GoogleTextToSpeech;
-import javafx.application.Application;
-import javafx.stage.Stage;
 
-public class TextToSpeechSample{
+public class TextToSpeechWithPlayback{
 	
 	public static void main(String[] args) {
 		
@@ -25,7 +24,7 @@ public class TextToSpeechSample{
 		
 		//Finally convert the text and play back the mp3 files
 		GoogleTextToSpeech tts = new GoogleTextToSpeech(outputPath);
-		tts.convertText(text, "Independence", mp3Player);
-	}
+		tts.convertTextAsynch(text,GLanguage.English_GB,"Independence",true,mp3Player);
+	} 
 	
 }
