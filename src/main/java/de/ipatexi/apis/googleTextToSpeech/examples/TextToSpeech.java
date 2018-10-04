@@ -6,6 +6,8 @@ import de.ipatexi.apis.googleTextToSpeech.GLanguage;
 import de.ipatexi.apis.googleTextToSpeech.GoogleTextToSpeech;
 
 /**
+ * Basic example demonstrating text to speech conversion
+ * 
  * @author Kilian
  *
  */

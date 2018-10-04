@@ -6,6 +6,8 @@ import de.ipatexi.apis.googleTextToSpeech.GLanguage;
 import de.ipatexi.apis.googleTextToSpeech.GoogleTextToSpeech;
 
 /**
+ * Basic example demonstrating conversion of a text with multiple different languages 
+ * 
  * @author Kilian
  *
  */

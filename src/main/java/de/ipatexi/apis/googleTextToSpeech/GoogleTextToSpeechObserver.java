@@ -23,7 +23,8 @@ public interface GoogleTextToSpeechObserver {
 	public void firstFileDownloaded(File f, int id);
 
 	/**
-	 * Gets called when ever a file is downloaded and got written to the disk
+	 * Gets called when ever a file is downloaded and got written to the disk.
+	 * 
 	 * 
 	 * @param f  The file which was created
 	 * @param id A unique id given to the request to connect successive

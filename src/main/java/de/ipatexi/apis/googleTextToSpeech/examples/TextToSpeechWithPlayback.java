@@ -5,6 +5,9 @@ import java.io.File;
 import de.ipatexi.apis.googleTextToSpeech.GLanguage;
 import de.ipatexi.apis.googleTextToSpeech.GoogleTextToSpeech;
 
+/**
+ * Converting a string to text and play it on the speakers
+ */
 public class TextToSpeechWithPlayback{
 	
 	public static void main(String[] args) {
