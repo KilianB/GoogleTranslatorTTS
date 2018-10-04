@@ -1,6 +1,6 @@
-package de.ipatexi.apis.googleTextToSpeech;
+package com.github.kilianB.apis.googleTextToSpeech;
 
-import static de.ipatexi.apis.googleTextToSpeech.GLanguage.*;
+import static com.github.kilianB.apis.googleTextToSpeech.GLanguage.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,11 +10,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
@@ -40,7 +38,7 @@ public class GoogleTextToSpeech {
 	private static final Logger LOGGER = Logger.getLogger(GoogleTextToSpeech.class.getName());
 
 	private static final AtomicInteger convertId = new AtomicInteger(0);
-	private static final int BITRATE = 32000; // 32kbit Bitrate of the files
+	// private static final int BITRATE = 32000; // 32kbit Bitrate of the files
 	private static final int BITS_PER_DATA_BLOCK = 736; // MP3 Data block lenght
 	private static final int BITS_PER_HEADER_BLOCK = 32; // MP3 Header block length
 	private static final byte[] MP3_HEADER = new byte[] { (byte) 0xff, (byte) 0xf3, 0x44, (byte) 0xc4 };
@@ -56,8 +54,9 @@ public class GoogleTextToSpeech {
 	 * our request in multiple requests. Increasing the characterLimit will result
 	 * in increased performance and fewer generated mp3 files.
 	 * 
-	 * TODO we could use a shifting window to avoid pronaunciation issues when starting a new
-	 * sentence. Overlap for 10 characters and XOR the bytes produced to find the beginning.
+	 * TODO we could use a shifting window to avoid pronaunciation issues when
+	 * starting a new sentence. Overlap for 10 characters and XOR the bytes produced
+	 * to find the beginning.
 	 * 
 	 */
 	private int characterLimit = 200;
@@ -90,13 +89,13 @@ public class GoogleTextToSpeech {
 	 * If you bombard google with to many requests at the same time they will eventually blacklist you. If you multi thread a large request it's better to add a small delay
 	 * between each request. 
 	 */
-	
-	private int mismatchBlockThreshold = 12;	//How many blocks may differ from aaaa or 5555 before we truncate them
-	
+
+	private int mismatchBlockThreshold = 12; // How many blocks may differ from aaaa or 5555 before we truncate them
+
 	private long msSleepBetweenRequests = 50;
 
 	/**
-	 * @param outFilePath The directory where the .mp3 files will be stored
+	 * @param outputDirectoryPath The directory where the .mp3 files will be stored
 	 */
 	public GoogleTextToSpeech(String outputDirectoryPath) {
 		this.outputDirectoryPath = outputDirectoryPath;
@@ -179,9 +178,11 @@ public class GoogleTextToSpeech {
 	 *                        characters might mess up the pronunciation.
 	 * @param language        The language and accent which will be used to
 	 *                        pronounce the text.
-	 * @param outputFilePath
-	 * @param deleteTempFiles
-	 * @param observer
+	 * @param outputFilePath  The name or path of the output file without extension
+	 * @param deleteTempFiles If true delete the individual files downloaded to
+	 *                        construct the final merged file
+	 * @param observer        a listener notifying about the progress of the
+	 *                        execution may be null
 	 */
 	public void convertTextAsynch(String text, GLanguage language, String outputFilePath, boolean deleteTempFiles,
 			GoogleTextToSpeechObserver observer) {
@@ -200,9 +201,11 @@ public class GoogleTextToSpeech {
 	 *                        characters might mess up the pronunciation.
 	 * @param language        The language and accent which will be used to
 	 *                        pronounce the text.
-	 * @param outputFilePath
-	 * @param deleteTempFiles
-	 * @param observer
+	 * @param outoutFilePath  The name or path of the output file without extension
+	 * @param deleteTempFiles If true delete the individual files downloaded to
+	 *                        construct the final merged file
+	 * @param observer        a listener notifying about the progress of the
+	 *                        execution may be null
 	 */
 	public void convertTextMultiLanguageAsynch(String[] text, GLanguage language[], String outoutFilePath,
 			boolean deleteTempFiles, GoogleTextToSpeechObserver observer) {
@@ -213,7 +216,7 @@ public class GoogleTextToSpeech {
 					tempFiles.toArray(new File[tempFiles.size()]));
 
 			if (observer != null)
-				observer.mergeCompleted(id, mergedFile);
+				observer.mergeCompleted(mergedFile,id);
 
 		}).start();
 	}
@@ -223,11 +226,16 @@ public class GoogleTextToSpeech {
 	 * chunks which comply with the character limit set at the beginning. Afterwards
 	 * the url is queried and the mp3 files are downloaded. Multi threaded.
 	 * 
-	 * @param text
-	 * @param language
-	 * @param outputFilePrefix
-	 * @param temporaryFiles
-	 * @param observer
+	 * @param text             The string which will be converted to speech. Special
+	 *                         characters might mess up the pronunciation.
+	 * @param language         The language and accent which will be used to
+	 *                         pronounce the text.
+	 * @param outputFilePrefix file prefix appened after directory and before
+	 *                         filename
+	 * @param temporaryFiles   a list which will be populated with a reference to
+	 *                         the temporary files created
+	 * @param observer         a listener notifying about the progress of the
+	 *                         execution. may be null
 	 * @return the id used to notify the listeners
 	 */
 	private int convertText(String[] text, GLanguage[] language, String outputFilePrefix,
@@ -270,7 +278,6 @@ public class GoogleTextToSpeech {
 				requestStrings.add(tempRequest);
 			}
 			if (j >= language.length) {
-				// TODO how do enums behave in multi threaded enviroments?
 				requestData.add(new RequestData(defaultLanguage, requestStrings));
 			} else {
 				requestData.add(new RequestData(language[j], requestStrings));
@@ -386,7 +393,7 @@ public class GoogleTextToSpeech {
 	 * @param targetName     The name of the new file
 	 * @param deleteOldFiles Delete the temporary files created by the api
 	 * @param filesToMerge   Mp3 files which will be merged in order
-	 * @return
+	 * @return the final single mp3 containing all concatenated files
 	 */
 	private File mergeFiles(String targetName, boolean deleteOldFiles, File... filesToMerge) {
 
@@ -438,50 +445,47 @@ public class GoogleTextToSpeech {
 				int truncateBlocksAtEndOfFile = 0;
 
 				for (truncateBlocksAtEndOfFile = 0; true; truncateBlocksAtEndOfFile++) {
-										
+
 					byte[] bArray = new byte[byteCount];
-	
-					mb.position((int) fileChannel.size() - byteCount * (truncateBlocksAtEndOfFile+1));
-					mb.get(bArray,0, byteCount);
+
+					mb.position((int) fileChannel.size() - byteCount * (truncateBlocksAtEndOfFile + 1));
+					mb.get(bArray, 0, byteCount);
 
 					// Check if we caught an mp3 header
 					if (!Arrays.equals(bArray, 0, 4, MP3_HEADER, 0, 4)) {
-						LOGGER.warning("Expected mp3 header block but didn't find ít");
+						LOGGER.warning("Expected mp3 header block but didn't find it");
 					}
 
 					// Skip 12 (arbitrary?) bytes
 
-					
 					int dataStart = MP3_HEADER.length + 12;
-					
+
 					System.out.println("Block: " + truncateBlocksAtEndOfFile);
-					
+
 					boolean mismatchBlock = false;
-					
+
 					for (int j = dataStart, mismatch = 0; j < byteCount; j++) {
-					
+
 						// Check if it is 55 or aa block
-						if (bArray[j] != (byte)0x55 && bArray[j] != (byte)0xAA) {
-							//System.out.println("Mimatch: " + Integer.toHexString(bArray[j]));
+						if (bArray[j] != (byte) 0x55 && bArray[j] != (byte) 0xAA) {
+							// System.out.println("Mimatch: " + Integer.toHexString(bArray[j]));
 							mismatch++;
-							if(mismatch >= mismatchBlockThreshold) {
+							if (mismatch >= mismatchBlockThreshold) {
 								mismatchBlock = true;
 								break;
 							}
-							
+
 						}
 					}
-					if(mismatchBlock)
+					if (mismatchBlock)
 						break;
 				}
-				
-				
 
 				int bytesToTruncate = truncateBlocksAtEndOfFile * ((BITS_PER_DATA_BLOCK + BITS_PER_HEADER_BLOCK) / 8);
 
-				//Reset buffer position
+				// Reset buffer position
 				mb.position(0);
-				
+
 				while (!done && mb.hasRemaining()) {
 					nGet = Math.min(mb.remaining(), SIZE);
 

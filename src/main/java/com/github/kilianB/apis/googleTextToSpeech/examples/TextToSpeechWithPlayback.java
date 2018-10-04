@@ -1,9 +1,9 @@
-package de.ipatexi.apis.googleTextToSpeech.examples;
+package com.github.kilianB.apis.googleTextToSpeech.examples;
 
 import java.io.File;
 
-import de.ipatexi.apis.googleTextToSpeech.GLanguage;
-import de.ipatexi.apis.googleTextToSpeech.GoogleTextToSpeech;
+import com.github.kilianB.apis.googleTextToSpeech.GLanguage;
+import com.github.kilianB.apis.googleTextToSpeech.GoogleTextToSpeech;
 
 /**
  * Converting a string to text and play it on the speakers
@@ -26,7 +26,7 @@ public class TextToSpeechWithPlayback{
 		SimpleMP3Player mp3Player = new SimpleMP3Player();
 		
 		//Finally convert the text and play back the mp3 files
-		GoogleTextToSpeech tts = new GoogleTextToSpeech(outputPath);
+		var tts = new GoogleTextToSpeech(outputPath);
 		tts.convertTextAsynch(text,GLanguage.English_GB,"Independence",true,mp3Player);
 	} 
 	

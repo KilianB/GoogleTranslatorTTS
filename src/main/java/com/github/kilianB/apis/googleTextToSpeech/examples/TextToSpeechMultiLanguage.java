@@ -1,9 +1,9 @@
-package de.ipatexi.apis.googleTextToSpeech.examples;
+package com.github.kilianB.apis.googleTextToSpeech.examples;
 
 import java.io.File;
 
-import de.ipatexi.apis.googleTextToSpeech.GLanguage;
-import de.ipatexi.apis.googleTextToSpeech.GoogleTextToSpeech;
+import com.github.kilianB.apis.googleTextToSpeech.GLanguage;
+import com.github.kilianB.apis.googleTextToSpeech.GoogleTextToSpeech;
 
 /**
  * Basic example demonstrating conversion of a text with multiple different languages 
@@ -22,7 +22,7 @@ public class TextToSpeechMultiLanguage {
 		outputDirectory.mkdirs();
 
 		// Convert the text and retrieve an mp3 file
-		GoogleTextToSpeech tts = new GoogleTextToSpeech(outputPath);
+		var tts = new GoogleTextToSpeech(outputPath);
 
 		// Request an mp3 file with multiple different pronounciations
 		String text[] = new String[] { "The author", "Immanuel Kant",

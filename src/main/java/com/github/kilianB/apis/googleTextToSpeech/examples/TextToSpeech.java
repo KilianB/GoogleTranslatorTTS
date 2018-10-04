@@ -1,9 +1,9 @@
-package de.ipatexi.apis.googleTextToSpeech.examples;
+package com.github.kilianB.apis.googleTextToSpeech.examples;
 
 import java.io.File;
 
-import de.ipatexi.apis.googleTextToSpeech.GLanguage;
-import de.ipatexi.apis.googleTextToSpeech.GoogleTextToSpeech;
+import com.github.kilianB.apis.googleTextToSpeech.GLanguage;
+import com.github.kilianB.apis.googleTextToSpeech.GoogleTextToSpeech;
 
 /**
  * Basic example demonstrating text to speech conversion
@@ -26,7 +26,7 @@ public class TextToSpeech {
 		outputDirectory.mkdirs();
 
 		// Convert the text and retrieve an mp3 file
-		GoogleTextToSpeech tts = new GoogleTextToSpeech(outputPath);
+		var tts = new GoogleTextToSpeech(outputPath);
 		File convertedTextMP3 = tts.convertText(text, GLanguage.English_US, "FileName");
 
 

@@ -35,7 +35,7 @@ public class TextToSpeechSample{
         
         GoogleTextToSpeechObserver callback = new GoogleTextToSpeechAdapter() {
         	@Override
-        	public void mergeCompleted(int id, File f) {
+        	public void mergeCompleted(File f,int id) {
         		System.out.println("File available for playback: " + f.getAbsolutePath());
         	}
         };

@@ -1,4 +1,4 @@
-package de.ipatexi.apis.googleTextToSpeech;
+package com.github.kilianB.apis.googleTextToSpeech;
 
 public enum GLanguage {
 	//TODO find naming convention

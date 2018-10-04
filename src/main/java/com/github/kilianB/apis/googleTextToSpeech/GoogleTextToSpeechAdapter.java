@@ -1,4 +1,4 @@
-package de.ipatexi.apis.googleTextToSpeech;
+package com.github.kilianB.apis.googleTextToSpeech;
 
 import java.io.File;
 
@@ -18,5 +18,5 @@ public class GoogleTextToSpeechAdapter implements GoogleTextToSpeechObserver {
 	public void fileDownloadCompleted(int id) {}
 
 	@Override
-	public void mergeCompleted(int id, File f) {}
+	public void mergeCompleted(File f,int id) {}
 }
