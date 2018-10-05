@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>github.com.kilianB</groupId>
 	<artifactId>GoogleTranslatorTTS</artifactId>
-	<version>1.1.0</version>
+	<version>1.0.0</version>
 
 	<description>A java library allowing to convert text to an mp3 file using the google translator endpoint</description>
 	<url>https://github.com/KilianB/GoogleTranslatorTTS</url>
@@ -41,8 +41,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.7.0</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>10</source>
+					<target>10</target>
 					<excludes>
 						<exclude>**/examples/*</exclude>
 					</excludes>

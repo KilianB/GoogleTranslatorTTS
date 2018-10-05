@@ -216,7 +216,7 @@ public class GoogleTextToSpeech {
 					tempFiles.toArray(new File[tempFiles.size()]));
 
 			if (observer != null)
-				observer.mergeCompleted(mergedFile, id);
+				observer.mergeCompleted(mergedFile,id);
 
 		}).start();
 	}
@@ -451,15 +451,9 @@ public class GoogleTextToSpeech {
 					mb.position((int) fileChannel.size() - byteCount * (truncateBlocksAtEndOfFile + 1));
 					mb.get(bArray, 0, byteCount);
 
-					// Check if we caught an mp3 header Only java 10 support
-//					if (!Arrays.equals(bArray, 0, 4, MP3_HEADER, 0, 4)) {
-//						LOGGER.warning("Expected mp3 header block but didn't find it");
-//					}
-					for (int j = 0; j < 4; j++) {
-						if (bArray[j] != MP3_HEADER[j]) {
-							LOGGER.warning("Expected mp3 header block but didn't find it");
-							break;
-						}
+					// Check if we caught an mp3 header
+					if (!Arrays.equals(bArray, 0, 4, MP3_HEADER, 0, 4)) {
+						LOGGER.warning("Expected mp3 header block but didn't find it");
 					}
 
 					// Skip 12 (arbitrary?) bytes
