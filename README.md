@@ -26,6 +26,14 @@ Hosted on <a href="https://bintray.com/kilianb/maven/GoogleTranslatorTTS">bintra
   </repository>
 </repositories>
 
+<!-- Statring with 1.1.0 compiled for Java 8 -->
+<dependency>
+  <groupId>github.com.kilianB</groupId>
+  <artifactId>GoogleTranslatorTTS</artifactId>
+  <version>1.1.0</version>
+</dependency>
+
+<!-- Java 10 --> 
 <dependency>
   <groupId>github.com.kilianB</groupId>
   <artifactId>GoogleTranslatorTTS</artifactId>
