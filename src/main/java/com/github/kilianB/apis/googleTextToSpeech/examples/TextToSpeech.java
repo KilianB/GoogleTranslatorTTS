@@ -29,7 +29,6 @@ public class TextToSpeech {
 		var tts = new GoogleTextToSpeech(outputPath);
 		File convertedTextMP3 = tts.convertText(text, GLanguage.English_US, "FileName");
 
-
 		System.out.println("Path: " + convertedTextMP3.getAbsolutePath());
 		System.out.println("Bytes: " + convertedTextMP3.length());
 	}

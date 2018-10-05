@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -21,6 +22,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+
+import sun.misc.Unsafe;
 
 /**
  * Convert long strings of text into .mp3 files in real time utilizing googles
@@ -93,6 +96,32 @@ public class GoogleTextToSpeech {
 	private int mismatchBlockThreshold = 12; // How many blocks may differ from aaaa or 5555 before we truncate them
 
 	private long msSleepBetweenRequests = 50;
+
+	/*
+	 * On windows mapped byte buffers are not closed correctly and prevent the
+	 * system to release references preventing us from delete temporary files and
+	 * reusing existing file names. See
+	 * https://bugs.java.com/view_bug.do?bug_id=4715154 on windows.
+	 */
+
+	// If true use the misc unsafe class to clean the buffer. If false attempt to
+	// null reference and try to force garbage collection
+	private static boolean bufferCleanStrategyUnsafe = true;
+
+	private static Unsafe unsafe;
+
+	static {
+		if (bufferCleanStrategyUnsafe) {
+			Field f;
+			try {
+				f = Unsafe.class.getDeclaredField("theUnsafe");
+				f.setAccessible(true);
+				unsafe = (Unsafe) f.get(null);
+			} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	/**
 	 * @param outputDirectoryPath The directory where the .mp3 files will be stored
@@ -216,7 +245,7 @@ public class GoogleTextToSpeech {
 					tempFiles.toArray(new File[tempFiles.size()]));
 
 			if (observer != null)
-				observer.mergeCompleted(mergedFile,id);
+				observer.mergeCompleted(mergedFile, id);
 
 		}).start();
 	}
@@ -370,7 +399,7 @@ public class GoogleTextToSpeech {
 				temporaryFiles.add(tempFile);
 			}
 
-			threadPool.shutdown();
+			threadPool.shutdownNow();
 			if (observer != null) {
 				observer.fileDownloadCompleted(identifier);
 			}
@@ -460,8 +489,6 @@ public class GoogleTextToSpeech {
 
 					int dataStart = MP3_HEADER.length + 12;
 
-					System.out.println("Block: " + truncateBlocksAtEndOfFile);
-
 					boolean mismatchBlock = false;
 
 					for (int j = dataStart, mismatch = 0; j < byteCount; j++) {
@@ -503,12 +530,25 @@ public class GoogleTextToSpeech {
 
 				fileInputStream.close();
 				fileChannel.close();
+
+				if (unsafe != null) {
+					unsafe.invokeCleaner(mb);
+				} else {
+					mb = null;
+					System.gc();
+				}
+
+				// Manually null reference collection
+				// Windows bug: https://bugs.java.com/view_bug.do?bug_id=4715154
+				// mb = null;
+				// System.gc();
 			}
 
 			fileOutputStream.close();
 
 			// Delete temporary files if applicable
 			if (deleteOldFiles) {
+				// Windows bug: https://bugs.java.com/view_bug.do?bug_id=4715154
 				for (File f : filesToMerge) {
 					// Files.delete(f.toPath()); for exception. Can be blocked if using inside git
 					// repo

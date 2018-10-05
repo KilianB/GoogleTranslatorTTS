@@ -29,7 +29,7 @@ Hosted on <a href="https://bintray.com/kilianb/maven/GoogleTranslatorTTS">bintra
 <dependency>
   <groupId>github.com.kilianB</groupId>
   <artifactId>GoogleTranslatorTTS</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
 </dependency>
 ````
 
