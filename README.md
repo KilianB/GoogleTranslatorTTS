@@ -1,7 +1,37 @@
 # Google-Text-To-Speech-Java-API
+
+ [ ![Download](https://api.bintray.com/packages/kilianb/maven/GoogleTranslatorTTS/images/download.svg) ](https://bintray.com/kilianb/maven/GoogleTranslatorTTS/_latestVersion)
+
+
 Convert long strings of text into .mp3 files in real time utilizing googles translator text to speech service. Supports multi-language- requests and multi-threading resulting in usually responds times of < .75 seconds. 
 
-Lightweight, no dependencies.
+- Lightweight
+- No dependencies
+
+While stable during the past time the translator endpoint by google is undocumented and subject to change without any notification. This library
+works great for private projects and quick prototyping where ever text to speech without quote limit or fees is needed. When implementing 
+a commercial or large scale project please consider falling back to one of the official text to speech libraries
+e.g. <a href="https://cloud.google.com/text-to-speech/">Google Cloud</a>, <a href="https://azure.microsoft.com/en-us/services/cognitive-services/text-to-speech/">Microsoft Azure</a>, <a href="https://aws.amazon.com/de/polly/what-is-text-to-speech/">Amazon web services</a>.
+
+
+## Maven, Gradly, Ivy
+
+Hosted on <a href="https://bintray.com/kilianb/maven/GoogleTranslatorTTS">bintray</a>.
+
+````
+<repositories>
+  <repository>
+    <id>jcenter</id>
+    <url>https://jcenter.bintray.com/</url>
+  </repository>
+</repositories>
+
+<dependency>
+  <groupId>github.com.kilianB</groupId>
+  <artifactId>GoogleTranslatorTTS</artifactId>
+  <version>1.0.0</version>
+</dependency>
+````
 
 ## Example usage 
 
